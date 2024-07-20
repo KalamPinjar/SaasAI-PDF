@@ -7,7 +7,7 @@ import { ModeToggle } from "./ui/theme-toggle";
 
 const Navbar = () => {
   return (
-    <nav className="top-0 z-30 sticky inset-x-0 border-gray-200 bg-white/75 dark:bg-black/75 backdrop-blur-lg border-b dark:border-none w-full h-14 transition-all">
+    <nav className="top-0 z-30 sticky inset-x-0 border-gray-200 dark:border-gray-900 bg-white/75 dark:bg-black/75 dark:shadow-md dark:shadow-white/5 backdrop-blur-lg border-b w-full h-14 transition-all dark">
       <MaxWidthWrapper>
         <div className="flex justify-between items-center border-zinc-200 border-b dark:border-none h-14">
           <Link href="/" className="z-40 flex font-semibold">

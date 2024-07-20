@@ -1,20 +1,56 @@
 "use client";
+
 import { trpc } from "@/app/_trpc/client";
 import UploadButton from "./UploadBtn";
-import { Ghost, MessageSquare, Plus, Trash } from "lucide-react";
+import { Ghost, Loader2, MessageSquare, Plus, Trash } from "lucide-react";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Button } from "./ui/button";
+import toast, { Toaster } from "react-hot-toast";
 
 const DashboardPage = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [currentlyDeleting, setCurrentlyDeleting] = useState<string | null>(
+    null
+  );
+
+  const utils = trpc.useUtils();
   const { data: files, isLoading } = trpc.getUserFiles.useQuery();
-  const isDarkMode = localStorage.getItem("theme") === "dark";
+
+  useEffect(() => {
+    const isDark = localStorage.getItem("theme") === "dark";
+    setIsDarkMode(isDark);
+  }, []);
+
+  const { mutate: deleteFile } = trpc.deleteFile.useMutation({
+    onError(error, variables, context) {
+      toast.error("Failed to delete file");
+      console.log(error);
+      console.log({ variables, context });
+
+      utils.getUserFiles.invalidate();
+
+      setCurrentlyDeleting(null);
+    },
+
+    onSuccess: () => {
+      toast.success("File deleted successfully");
+      utils.getUserFiles.invalidate();
+    },
+    onMutate: ({ id }) => {
+      setCurrentlyDeleting(id);
+    },
+    onSettled: () => {
+      setCurrentlyDeleting(null);
+    },
+  });
 
   return (
     <main className="mx-auto md:p-10 max-w-7xl">
+      <Toaster />
       <div className="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-4 sm:gap-0 border-gray-200 dark:border-gray-700 mt-8 pb-5 border-b">
         <h1 className="mb-3 font-semibold text-5xl text-gray-900 dark:text-gray-200">
           My Files
@@ -58,8 +94,18 @@ const DashboardPage = () => {
                     <MessageSquare className="w-4 h-4" />
                     test
                   </div>
-                  <Button variant="destructive" size="sm" className="w-full">
-                    <Trash className="w-4 h-4" />
+                  <Button
+                    onClick={() => deleteFile({ id: file.id })}
+                    disabled={currentlyDeleting === file.id}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                  >
+                    {currentlyDeleting === file.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </li>
@@ -68,10 +114,30 @@ const DashboardPage = () => {
       ) : isLoading ? (
         isDarkMode ? (
           <SkeletonTheme baseColor="#202020" highlightColor="#444">
-            <Skeleton height={100} count={3} />
+            <Skeleton
+              style={{
+                padding: "1rem",
+                marginRight: "0.5rem",
+                marginTop: "2rem",
+              }}
+              inline={true}
+              height={140}
+              width={340}
+              count={3}
+            />
           </SkeletonTheme>
         ) : (
-          <Skeleton height={100} count={3} />
+          <Skeleton
+            style={{
+              padding: "1rem",
+              marginRight: "0.5rem",
+              marginTop: "2rem",
+            }}
+            inline={true}
+            height={140}
+            width={340}
+            count={3}
+          />
         )
       ) : (
         <div className="flex flex-col items-center gap-2 mt-16">
