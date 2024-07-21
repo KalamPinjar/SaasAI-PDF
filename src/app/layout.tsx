@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import Providers from "@/components/Providers";
 import "react-loading-skeleton/dist/skeleton.css";
-
+import "simplebar-react/dist/simplebar.min.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -21,7 +21,6 @@ export default function RootLayout({
 }>) {
   return (
     <html
-    
     lang="en" suppressHydrationWarning>
       <Providers>
         <body
