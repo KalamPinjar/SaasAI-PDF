@@ -2,10 +2,13 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { db } from "@/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
 import pinecone from "@/lib/pinecone";
+import { CohereClient } from "cohere-ai";
 
+const cohere = new CohereClient({
+  token: process.env.NEXT_PUBLIC_COHERE_API_KEY!,
+});
 const f = createUploadthing();
 
 const middleware = async () => {
@@ -20,6 +23,23 @@ const middleware = async () => {
     console.error("Error in middleware:", error);
     throw error;
   }
+};
+
+const generateEmbeddings = async (texts: string[]) => {
+  const response = await fetch('https://api.cohere.ai/v1/embed', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_COHERE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      texts: texts,
+      model: "embed-english-v2.0",
+    }),
+  });
+
+  const data = await response.json();
+  return data.embeddings;
 };
 
 const onUploadComplete = async ({
@@ -75,9 +95,8 @@ const onUploadComplete = async ({
     console.log("PDF loaded with pages:", pageAmt);
 
     const pineconeIndex = pinecone.Index("docquery");
-    const embeddings = new OpenAIEmbeddings({
-      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-    });
+    const texts = pageLevelDocs.map((doc) => doc.pageContent);
+    const embeddings = await generateEmbeddings(texts);
 
     await PineconeStore.fromDocuments(pageLevelDocs, embeddings, {
       pineconeIndex,

@@ -2,11 +2,29 @@ import { db } from "@/db";
 import { SendMessageValidator } from "@/lib/validator/SendMessageValidator";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest } from "next/server";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import pinecone from "@/lib/pinecone";
-import { PineconeStore } from "@langchain/pinecone";
-import { openai } from "@/lib/openai";
-import { OpenAIStream, StreamingTextResponse } from "ai";
+import pinecone, { getMatchesFromEmbeddings, Metadata } from "@/lib/pinecone";
+import { CohereClient } from "cohere-ai";
+
+const cohere = new CohereClient({
+  token: process.env.NEXT_PUBLIC_COHERE_API_KEY!,
+});
+
+const generateEmbeddings = async (texts: string[]) => {
+  const response = await fetch("https://api.cohere.ai/v1/embed", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_COHERE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      texts: texts,
+      model: "embed-english-v2.0",
+    }),
+  });
+
+  const data = await response.json();
+  return data.embeddings;
+};
 
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
@@ -43,16 +61,14 @@ export const POST = async (req: NextRequest) => {
     },
   });
 
-  const embeddings = new OpenAIEmbeddings({
-    openAIApiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  });
+  const cohereEmbeddings = await generateEmbeddings([message]);
   const pineconeIndex = pinecone.Index("docquery");
-  const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-    pineconeIndex,
-    namespace: file.id,
-  });
 
-  const results = await vectorStore.similaritySearch(message, 4);
+  const matches = await getMatchesFromEmbeddings(
+    cohereEmbeddings[0],
+    4,
+    file.id
+  );
 
   const prevMessage = await db.message.findMany({
     where: {
@@ -65,53 +81,44 @@ export const POST = async (req: NextRequest) => {
   });
 
   const formattedPrevMessages = prevMessage.map((message) => ({
-    role: message.isUserMessage ? ("user" as const) : ("assistant" as const),
-    content: message.text,
+    role: message.isUserMessage ? "USER" : "CHATBOT",
+    message: message.text,
   }));
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    temperature: 0,
-    stream: true,
-    messages: [
+  const chatHistory = formattedPrevMessages.map((msg) => ({
+    role: msg.role as "USER" | "CHATBOT",
+    message: msg.message,
+  }));
+
+  const resultsContext = matches
+    .map((match) => match.metadata?.text)
+    .join("\n\n");
+
+  const response = await cohere.chat({
+    message: message,
+    chatHistory: [
+      ...chatHistory,
       {
-        role: "system",
-        content:
-          "Use the following pieces of context (or previous conversaton if needed) to answer the users question in markdown format.",
-      },
-      {
-        role: "user",
-        content: `Use the following pieces of context (or previous conversaton if needed) to answer the users question in markdown format. \nIf you don't know the answer, just say that you don't know, don't try to make up an answer.
-          
-    \n----------------\n
-    
-    PREVIOUS CONVERSATION:
-    ${formattedPrevMessages.map((message) => {
-      if (message.role === "user") return `User: ${message.content}\n`;
-      return `Assistant: ${message.content}\n`;
-    })}
-    
-    \n----------------\n
-    
-    CONTEXT:
-    ${results.map((r) => r.pageContent).join("\n\n")}
-    
-    USER INPUT: ${message}`,
+        role: "USER",
+        message: `Use the following context to answer the user's question:\n\n${resultsContext}`,
       },
     ],
+    model: "command-r-plus",
+    temperature: 0.3,
+    maxTokens: 100,
+    stopSequences: ["\n"],
   });
 
-  const stream = OpenAIStream(response, {
-    async onCompletion(message) {
-      await db.message.create({
-        data: {
-          fileId,
-          text: message,
-          userId: user.id,
-          isUserMessage: false,
-        },
-      });
+  const cohereResponse = response.text;
+
+  await db.message.create({
+    data: {
+      fileId,
+      text: cohereResponse,
+      userId: user.id,
+      isUserMessage: false,
     },
   });
-  return new StreamingTextResponse(stream);
+
+  return new Response(cohereResponse, { status: 200 });
 };
