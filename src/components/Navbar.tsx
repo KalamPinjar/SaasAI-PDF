@@ -35,6 +35,7 @@ const Navbar = () => {
                 Sign-in
               </LoginLink>
               <RegisterLink
+                style={{ color: "white" }}
                 className={buttonVariants({
                   size: "sm",
                 })}

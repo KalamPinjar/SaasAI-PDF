@@ -92,7 +92,7 @@ const PdfRenderer = ({ url }: PdfRendererProp) => {
                 }
               }}
               className={cn(
-                "w-12 h-8 bg-zinc-800",
+                "w-12 h-8 dark:bg-zinc-800",
                 errors.page && "focus-visible:ring-red-500 border-red-500"
               )}
             />
@@ -117,7 +117,7 @@ const PdfRenderer = ({ url }: PdfRendererProp) => {
         </div>
         <div className="space-x-2">
           <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild >
               <Button className="gap-1.5" variant="ghost" aria-label="zoom">
                 <ZoomIn className="w-4 h-4" />
                 {scale * 100}% <ChevronDown className="opacity-50 w-4 h-4" />
