@@ -122,3 +122,4 @@ export const POST = async (req: NextRequest) => {
 
   return new Response(cohereResponse, { status: 200 });
 };
+
