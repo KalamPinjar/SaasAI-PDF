@@ -13,17 +13,16 @@ import toast, { Toaster } from "react-hot-toast";
 
 const DashboardPage = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [currentlyDeleting, setCurrentlyDeleting] = useState<string | null>(
-    null
-  );
-
-  const utils = trpc.useUtils();
-  const { data: files, isLoading } = trpc.getUserFiles.useQuery();
-
   useEffect(() => {
     const isDark = localStorage.getItem("theme") === "dark";
     setIsDarkMode(isDark);
   }, []);
+
+  const [currentlyDeleting, setCurrentlyDeleting] = useState<string | null>(
+    null
+  );
+  const utils = trpc.useUtils();
+  const { data: files, isLoading } = trpc.getUserFiles.useQuery();
 
   const { mutate: deleteFile } = trpc.deleteFile.useMutation({
     onError(error, variables, context) {

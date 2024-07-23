@@ -14,7 +14,7 @@ const ChatInput = ({ isDisabled }: ChatInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   return (
     <div className="bottom-0 left-0 absolute w-full">
-      <form className="flex flex-row gap-3 mx-2 md:mx-4 md:last:md-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
+      <div className="flex flex-row gap-3 mx-2 md:mx-4 md:last:md-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
         <div className="relative flex md:flex-col flex-1 items-stretch gap-2 h-full">
           <div className="relative flex flex-col flex-grow p-4 w-full">
             <div className="relative">
@@ -38,15 +38,17 @@ const ChatInput = ({ isDisabled }: ChatInputProps) => {
               <Button
                 disabled={isDisabled || isLoading}
                 className="right-[8px] bottom-1.5 absolute"
-                onClick={() => addMessage()}
-                type="submit"
+                onClick={() => {
+                  addMessage();
+                  textareaRef.current?.focus();
+                }}
               >
                 <SendIcon className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

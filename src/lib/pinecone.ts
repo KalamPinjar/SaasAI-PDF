@@ -15,8 +15,8 @@ const pinecone = new Pinecone({
 });
 
 const dimension = 4096;
-const indexName = process.env.PINECONE_INDEX_NAME || "namespace-notes";
-
+const indexName = process.env.PINECONE_INDEX_NAME!;
+0
 // Function to create index if it does not exist
 const createIndexIfNotExists = async () => {
   try {

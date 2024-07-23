@@ -81,7 +81,7 @@ const ChatWrapper = ({ fileId }: ChatWrapperProps) => {
     <ChatContextProvider fileId={fileId}>
       <div className="relative flex flex-col justify-between gap-2 bg-zinc-50 dark:bg-slate-900 divide-y divide-zinc-200 min-h-full dark:text-zinc-400">
         <div className="flex flex-col flex-1 justify-between mb-28">
-          <Messages />
+          <Messages fileId={fileId} />
         </div>
         <ChatInput isDisabled />
       </div>

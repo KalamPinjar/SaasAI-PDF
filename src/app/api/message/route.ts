@@ -104,9 +104,7 @@ export const POST = async (req: NextRequest) => {
       },
     ],
     model: "command-r-plus",
-    temperature: 0.3,
-    maxTokens: 100,
-    stopSequences: ["\n"],
+    temperature: 0,
   });
 
   const cohereResponse = response.text;
@@ -122,4 +120,3 @@ export const POST = async (req: NextRequest) => {
 
   return new Response(cohereResponse, { status: 200 });
 };
-

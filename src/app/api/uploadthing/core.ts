@@ -2,7 +2,7 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { db } from "@/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { PineconeStore, PineconeStoreParams } from "@langchain/pinecone";
+import { PineconeStore } from "@langchain/pinecone";
 import pinecone from "@/lib/pinecone";
 import { CohereClient } from "cohere-ai";
 
@@ -106,7 +106,7 @@ const onUploadComplete = async ({
     }
 
     const blob = await response.blob();
-    const loader = new PDFLoader(blob, { splitPages: false });
+    const loader = new PDFLoader(blob);
     const pageLevelDocs = await loader.load();
     const pageAmt = pageLevelDocs.length;
 
