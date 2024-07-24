@@ -30,7 +30,7 @@ const AuthPage = () => {
     const redirectPath = origin ? `/${origin}` : "/dashboard";
     router.push(redirectPath);
   }
-  if (!isLoading && error) {
+  if (!isLoading && error?.data?.code === "UNAUTHORIZED") {
     router.push("/sign-in");
   }
 

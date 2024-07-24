@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <>
-      <MaxWidthWrapper className="flex flex-col justify-center items-center mt-27 sm:mt-40 mb-12 text-center">
+      <MaxWidthWrapper className="flex flex-col justify-center items-center mt-24 sm:mt-40 mb-12 text-center">
         <div className="flex justify-center items-center space-x-2 border-gray-200 hover:border-gray-300 bg-white hover:bg-white/50 dark:hover:bg-white/90 shadow-md backdrop-blur backdrop-md mx-auto mb-4 px-7 py-2 border rounded-full max-w-fit transition-all overflow-hidden">
           <p className="font-semibold text-2xl text-gray-700 dark:text-black">
             DocQuerry

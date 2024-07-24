@@ -48,7 +48,7 @@ const DashboardPage = () => {
   });
 
   return (
-    <main className="mx-auto md:p-10 max-w-7xl">
+    <main className="mx-auto p-2 md:p-10 max-w-7xl">
       <Toaster />
       <div className="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-4 sm:gap-0 border-gray-200 dark:border-gray-700 mt-8 pb-5 border-b">
         <h1 className="mb-3 font-semibold text-5xl text-gray-900 dark:text-gray-200">
