@@ -15,7 +15,6 @@ const Page = async ({ params }: PageProps) => {
 
   if (!user || !user.id) {
     redirect(`/auth-callback?origin=dashboard/${fileId}`);
-    return null; // Ensure the function exits after redirect
   }
 
   const file = await db.file.findFirst({
@@ -24,7 +23,6 @@ const Page = async ({ params }: PageProps) => {
 
   if (!file) {
     notFound();
-    return null; // Ensure the function exits after notFound
   }
 
   return (
