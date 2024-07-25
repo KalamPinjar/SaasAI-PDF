@@ -5,6 +5,8 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { PineconeStore } from "@langchain/pinecone";
 import pinecone from "@/lib/pinecone";
 import { CohereClient } from "cohere-ai";
+import { getUserSubscriptionPlan } from "@/lib/stripe";
+import { PLANS } from "@/config/stripe";
 
 // Assuming dimension is a constant that should match the Pinecone index dimension
 const dimension = 4096; // Example value, replace with actual dimension
@@ -37,8 +39,9 @@ const middleware = async () => {
     const user = await getUser();
 
     if (!user || !user.id) throw new Error("Unauthorized");
+    const subscriptionPlan = await getUserSubscriptionPlan();
 
-    return { userId: user.id };
+    return { userId: user.id, subscriptionPlan };
   } catch (error) {
     console.error("Error in middleware:", error);
     throw error;
@@ -110,6 +113,33 @@ const onUploadComplete = async ({
     const pageLevelDocs = await loader.load();
     const pageAmt = pageLevelDocs.length;
 
+    const { subscriptionPlan } = metadata;
+    const { isSubscribed } = subscriptionPlan;
+
+    const freePlan = PLANS.find((p) => p.name === "Free");
+    const proPlan = PLANS.find((p) => p.name === "Pro");
+
+    if (!freePlan || !proPlan) {
+      throw new Error("Plan definitions are missing");
+    }
+
+    const isExceeded =
+      (!isSubscribed && pageAmt > freePlan.pagesPerPdf) ||
+      (isSubscribed && pageAmt > proPlan.pagesPerPdf);
+
+    if (isExceeded) {
+      await db.file.update({
+        where: { id: createdFile.id },
+        data: { uploadStatus: "FAILED" },
+      });
+      console.log(
+        `Upload failed: Page limit exceeded for user ${
+          isSubscribed ? "Pro" : "Free"
+        } plan.`
+      );
+      return;
+    }
+
     console.log("PDF loaded with pages:", pageAmt);
 
     // Generate embeddings
@@ -164,9 +194,13 @@ const onUploadComplete = async ({
   }
 };
 
+
 // Define the file router
 export const ourFileRouter = {
-  pdfUploader: f({ pdf: { maxFileSize: "4MB" } })
+  freePlanUploader: f({ pdf: { maxFileSize: "4MB" } })
+    .middleware(middleware)
+    .onUploadComplete(onUploadComplete),
+  proPlanUploader: f({ pdf: { maxFileSize: "16MB" } })
     .middleware(middleware)
     .onUploadComplete(onUploadComplete),
 } satisfies FileRouter;

@@ -51,10 +51,10 @@ export async function POST(request: Request) {
   }
 
   if (event.type === "invoice.payment_succeeded") {
-    // Retrieve the subscription details from Stripe.
     const subscription = await stripe.subscriptions.retrieve(
       session.subscription as string
     );
+
     await db.user.update({
       where: {
         stripeSubscriptionId: subscription.id,
@@ -70,3 +70,9 @@ export async function POST(request: Request) {
 
   return new Response(null, { status: 200 });
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

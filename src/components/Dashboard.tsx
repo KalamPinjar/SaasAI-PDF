@@ -10,8 +10,13 @@ import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Button } from "./ui/button";
 import toast, { Toaster } from "react-hot-toast";
+import { getUserSubscriptionPlan } from "@/lib/stripe";
 
-const DashboardPage = () => {
+interface DashboardProps {
+  subsciptionPlan: Awaited<ReturnType<typeof getUserSubscriptionPlan>>;
+}
+
+const DashboardPage = ({ subsciptionPlan }: DashboardProps) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   useEffect(() => {
     const isDark = localStorage.getItem("theme") === "dark";
@@ -54,7 +59,7 @@ const DashboardPage = () => {
         <h1 className="mb-3 font-semibold text-5xl text-gray-900 dark:text-gray-200">
           My Files
         </h1>
-        <UploadButton />
+        <UploadButton isSubscribed={subsciptionPlan.isSubscribed} />
       </div>
       {files && files?.length !== 0 ? (
         <ul className="gap-6 grid grid-cols-1 md:grid-cols-3 mt-8 divide-y divide-zinc-200">

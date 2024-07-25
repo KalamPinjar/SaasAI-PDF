@@ -30,7 +30,7 @@ const MobileNav = ({ isAuth }: { isAuth: boolean }) => {
       <div className="sm:hidden">
         <Menu
           onClick={toggleOpen}
-          className="relative -right-40 z-50 w-5 h-5 text-zinc-300 dark:text-zinc-400"
+          className="relative -right-[4rem] z-50 w-5 h-5 text-zinc-300 dark:text-zinc-400"
         />
 
         {isOpen && (
@@ -91,7 +91,9 @@ const MobileNav = ({ isAuth }: { isAuth: boolean }) => {
           </div>
         )}
       </div>
-      <ModeToggle />
+      <div className="relative right-12 sm:hidden">
+        <ModeToggle />
+      </div>
     </>
   );
 };
